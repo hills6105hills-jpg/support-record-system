@@ -1156,7 +1156,38 @@
         grid-template-columns: 1fr;
       }
     }
-  </style>
+      
+    .btn-edit {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-right: 5px;
+      min-height: 32px;
+    }
+    
+    .btn-edit:hover {
+      background: #0b7dda;
+    }
+    
+    .btn-delete-record {
+      background: #f44336;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      min-height: 32px;
+    }
+    
+    .btn-delete-record:hover {
+      background: #da190b;
+    }
+</style>
 </head>
 <body>
 
@@ -1240,6 +1271,7 @@
         <th>利用者名</th>
         <th>記録者名</th>
         <th>記録内容</th>
+        <th style="width: 160px;">操作</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -1509,6 +1541,25 @@
 </div>
 
 <script>
+    // ユニークID生成関数
+  function generateRecordId() {
+    return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+  
+  // 既存データにIDを付与
+  function ensureRecordIds() {
+    let updated = false;
+    records.forEach(record => {
+      if (!record.id) {
+        record.id = generateRecordId();
+        updated = true;
+      }
+    });
+    if (updated) {
+      saveRecords();
+    }
+  }
+  
   // グローバル変数
   let records = JSON.parse(localStorage.getItem('records') || '[]');
   let filtered = [...records];
@@ -1835,6 +1886,7 @@
       const user = masterUsers[index];
       
       const record = {
+        id: generateRecordId(),
         date,
         service,
         user: user.name,
@@ -2025,6 +2077,8 @@
       saveRecords();
       saveMasterData();
       
+      // データ反映を確実に実行
+      ensureRecordIds();
       filtered = [...records];
       renderTable();
       updateFilterOptions();
@@ -2845,6 +2899,7 @@
     const vitalArea = row.querySelector('.vital-input-area');
     
     let record = { 
+      id: generateRecordId(),
       date, 
       service, 
       user, 
@@ -2961,7 +3016,7 @@
     tbody.innerHTML = '';
     
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; color: #999;">記録がありません</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #999;">記録がありません</td></tr>';
       return;
     }
     
@@ -3009,6 +3064,10 @@
         <td>${r.user}</td>
         <td>${r.staff}</td>
         <td style="min-width: 300px;">${contentHtml}</td>
+        <td style="white-space: nowrap;">
+          <button class="btn-edit" onclick="editRecord('${r.id || ''}')">✏️</button>
+          <button class="btn-delete-record" onclick="deleteRecord('${r.id || ''}')">🗑️</button>
+        </td>
       `;
       tbody.appendChild(tr);
     });
@@ -3143,10 +3202,94 @@
     alert('✓ すべての記録を削除しました');
   }
 
+  
+  // 記録削除機能
+  function deleteRecord(recordId) {
+    if (!recordId) {
+      alert('記録IDが見つかりません');
+      return;
+    }
+    
+    if (!confirm('この記録を削除しますか？\n\n削除した記録は復元できません。')) {
+      return;
+    }
+    
+    const index = records.findIndex(r => r.id === recordId);
+    if (index > -1) {
+      records.splice(index, 1);
+      saveRecords();
+      
+      filtered = [...records];
+      renderTable();
+      
+      alert('✓ 記録を削除しました');
+    } else {
+      alert('記録が見つかりませんでした');
+    }
+  }
+  
+  // 記録編集機能（簡易版：削除して再入力を促す）
+  function editRecord(recordId) {
+    if (!recordId) {
+      alert('記録IDが見つかりません');
+      return;
+    }
+    
+    const record = records.find(r => r.id === recordId);
+    if (!record) {
+      alert('記録が見つかりませんでした');
+      return;
+    }
+    
+    // 記録内容を表示
+    let message = '【記録の詳細】\n\n';
+    message += `記録日: ${record.date}\n`;
+    message += `サービス区分: ${record.service}\n`;
+    message += `利用者名: ${record.user}\n`;
+    message += `記録者名: ${record.staff}\n\n`;
+    
+    if (record.recordType === 'support') {
+      message += '【支援内容】\n';
+      record.supportContents.forEach((s, idx) => {
+        message += `\n${idx + 1}. ${s.type}\n`;
+        if (s.timeRange) message += `   時間: ${s.timeRange}\n`;
+        if (s.cond) message += `   様子: ${s.cond}\n`;
+        if (s.location) message += `   場所: ${s.location}\n`;
+        if (s.activity) message += `   活動: ${s.activity}\n`;
+        if (s.detail) message += `   詳細: ${s.detail}\n`;
+        if (s.note) message += `   特記: ${s.note}\n`;
+      });
+    } else if (record.recordType === 'vital') {
+      message += '【バイタル測定】\n';
+      record.vitalMeasurements.forEach((v, idx) => {
+        message += `\n測定${idx + 1}\n`;
+        if (v.time) message += `   時刻: ${v.time}\n`;
+        if (v.temp) message += `   体温: ${v.temp}℃\n`;
+        if (v.bpSys && v.bpDia) message += `   血圧: ${v.bpSys}/${v.bpDia}mmHg\n`;
+        if (v.pulse) message += `   脈拍: ${v.pulse}回/分\n`;
+        if (v.spo2) message += `   SpO2: ${v.spo2}%\n`;
+        if (v.resp) message += `   呼吸数: ${v.resp}回/分\n`;
+        if (v.note) message += `   特記: ${v.note}\n`;
+      });
+    }
+    
+    message += '\n\n【編集方法】\n';
+    message += '1. この記録を削除する\n';
+    message += '2. 「➕ 新規記録」または「📋 一括入力」で修正した内容を再入力\n\n';
+    message += 'この記録を削除しますか？';
+    
+    if (confirm(message)) {
+      deleteRecord(recordId);
+    }
+  }
+  
   // ページ読み込み時の処理
   document.addEventListener('DOMContentLoaded', () => {
     // セッションチェック
     checkSession();
+    
+    // 既存データにIDを付与
+    ensureRecordIds();
     
     // データ読み込み
     loadMasterData();
