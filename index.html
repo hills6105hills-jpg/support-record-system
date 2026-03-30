@@ -8,6 +8,9 @@
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect fill='%232c5aa0' width='180' height='180'/><text x='90' y='100' text-anchor='middle' fill='white' font-size='80' font-family='sans-serif'>📋</text></svg>">
   <title>支援記録管理システム - ログイン</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" 
+    onerror="console.log('QR CDN unavailable, using fallback')"
+    onload="window._qrcdnLoaded=true"></script>
   <style>
     * { 
       box-sizing: border-box; 
@@ -1187,6 +1190,196 @@
     .btn-delete-record:hover {
       background: #da190b;
     }
+
+    .btn-delete-selected {
+      background: #ff5722;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .btn-delete-selected:hover {
+      background: #e64a19;
+    }
+    
+    .record-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    #selectAllCheckbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* ===== タブナビゲーション ===== */
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 0;
+      border-bottom: 3px solid #2c5aa0;
+      padding: 0;
+    }
+    .tab-nav-btn {
+      padding: 12px 28px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      background: #e0e7f3;
+      color: #2c5aa0;
+      transition: all 0.2s;
+      min-height: 48px;
+      outline: none;
+    }
+    .tab-nav-btn.active {
+      background: #2c5aa0;
+      color: white;
+      box-shadow: 0 -2px 8px rgba(44,90,160,0.15);
+    }
+    .tab-nav-btn:hover:not(.active) {
+      background: #c5d4ed;
+    }
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* ===== 記録閲覧タブ用フィルター拡張 ===== */
+    .view-filter-section {
+      background: white;
+      padding: 20px;
+      border-radius: 0 8px 8px 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #e0e7f3;
+    }
+    .view-filter-section .filter-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .view-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .filter-count-badge {
+      display: inline-block;
+      background: #2c5aa0;
+      color: white;
+      padding: 4px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-left: 6px;
+    }
+
+    /* 編集モード表示 */
+    .edit-mode-banner {
+      display: none;
+      background: linear-gradient(135deg, #ff9800, #f44336);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-weight: bold;
+      font-size: 15px;
+      align-items: center;
+      gap: 10px;
+    }
+    .edit-mode-banner.active {
+      display: flex;
+    }
+    .btn-cancel-edit {
+      background: rgba(255,255,255,0.3);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.6);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      margin-left: auto;
+    }
+    .btn-cancel-edit:hover {
+      background: rgba(255,255,255,0.5);
+    }
+
+    /* 閲覧テーブルの操作列 */
+    .btn-edit-view {
+      background: #ff9800;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-right: 5px;
+      min-height: 32px;
+      font-weight: bold;
+    }
+    .btn-edit-view:hover { background: #e68900; }
+    .btn-delete-view {
+      background: #f44336;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      min-height: 32px;
+    }
+    .btn-delete-view:hover { background: #da190b; }
+
+    @media (max-width: 768px) {
+      .tab-nav-btn { padding: 10px 14px; font-size: 14px; }
+      .view-filter-section .filter-row { grid-template-columns: 1fr; }
+    }
+
+    /* ===== QRコード表示エリア ===== */
+    .qr-section {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid #e8e8e8;
+      text-align: center;
+    }
+    .qr-section h3 {
+      font-size: 13px;
+      color: #888;
+      margin: 0 0 10px 0;
+      font-weight: normal;
+    }
+    .qr-canvas-wrap {
+      display: inline-block;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    #qrCanvas {
+      display: block;
+    }
+    .qr-url-hint {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 8px;
+      word-break: break-all;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .login-container {
+      max-width: 440px !important;
+    }
 </style>
 </head>
 <body>
@@ -1214,6 +1407,15 @@
       
       <button type="submit" class="btn-login">ログイン</button>
     </form>
+
+    <!-- QRコード表示エリア -->
+    <div class="qr-section">
+      <h3>📱 スマートフォン・iPhoneからのアクセス</h3>
+      <div class="qr-canvas-wrap" id="qrWrap">
+        <!-- QRコードがここに生成されます -->
+      </div>
+      <p class="qr-url-hint" id="qrUrlHint">QRコードを読み取るとこのページにアクセスできます</p>
+    </div>
   </div>
 </div>
 
@@ -1228,55 +1430,118 @@
   </div>
   
   <div class="controls">
-    <button class="btn btn-add" onclick="addInputRow()">➕ 新規記録</button>
-    <button class="btn btn-batch" onclick="openBatchModal()">📋 一括入力</button>
-    <button class="btn btn-export" onclick="exportExcel()">📥 Excel出力</button>
     <button class="btn btn-master" onclick="openMasterModal()">⚙️ マスター</button>
     <button class="btn btn-sync" onclick="openSyncModal()">☁️ 同期</button>
-    <button class="btn btn-clear" onclick="clearAll()">🗑️ 全削除</button>
   </div>
-  
-  <h2>📝 記録入力</h2>
-  <div id="inputContainer"></div>
-  
-  <h2>📊 記録一覧</h2>
-  <div class="filter-section">
-    <div class="filter-row">
-      <div>
-        <label>月フィルター</label>
-        <input type="month" id="filterMonth">
+
+  <!-- タブナビゲーション -->
+  <div class="tab-nav">
+    <button class="tab-nav-btn active" id="tabBtnInput" onclick="switchTab('input')">📝 記録入力</button>
+    <button class="tab-nav-btn" id="tabBtnView" onclick="switchTab('view')">📋 記録閲覧</button>
+  </div>
+
+  <!-- 記録入力タブ -->
+  <div id="tabInput" class="tab-panel active">
+    <!-- 編集モードバナー -->
+    <div id="editModeBanner" class="edit-mode-banner">
+      <span>✏️ 編集モード：既存記録を削除して再入力してください</span>
+      <button class="btn-cancel-edit" onclick="cancelEditMode()">✕ キャンセル</button>
+    </div>
+    <div class="controls" style="margin-top:16px;">
+      <button class="btn btn-add" onclick="addInputRow()">➕ 新規記録</button>
+      <button class="btn btn-batch" onclick="openBatchModal()">📋 一括入力</button>
+      <button class="btn btn-sync" onclick="uploadLocalRecords()">⬆️ アップロード</button>
+      <button class="btn btn-clear" onclick="clearAll()">🗑️ 入力記録を全削除</button>
+    </div>
+    <!-- 入力済み記録の一覧（アップロード待ちリスト） -->
+    <div id="inputContainer"></div>
+    <div id="localRecordsSection" style="margin-top:24px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <h2 style="margin:0;">📋 アップロード待ち記録 <span id="localRecordCountBadge" style="background:#e53935;color:white;padding:3px 12px;border-radius:12px;font-size:14px;font-weight:bold;margin-left:6px;">0件</span></h2>
       </div>
-      <div>
-        <label>サービス区分</label>
-        <select id="filterService">
-          <option value="">サービス区分（全て）</option>
-        </select>
+      <table id="localRecordTable">
+        <thead>
+          <tr>
+            <th>記録日</th>
+            <th>サービス区分</th>
+            <th>利用者名</th>
+            <th>記録者名</th>
+            <th>記録内容</th>
+            <th style="width:80px;">操作</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 記録閲覧タブ -->
+  <div id="tabView" class="tab-panel">
+    <!-- ダウンロードボタン -->
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <button class="btn btn-sync" onclick="downloadCloudRecords()">⬇️ クラウドから記録をダウンロード</button>
+      <span id="cloudRecordInfo" style="color:#666;font-size:14px;">※ダウンロードした記録のみ表示されます</span>
+    </div>
+    <div class="view-filter-section">
+      <div class="filter-row">
+        <div>
+          <label>📅 月フィルター</label>
+          <input type="month" id="viewFilterMonth">
+        </div>
+        <div>
+          <label>🏷️ サービス区分</label>
+          <select id="viewFilterService">
+            <option value="">すべて</option>
+          </select>
+        </div>
+        <div>
+          <label>👤 利用者名</label>
+          <input type="text" id="viewFilterUser" placeholder="利用者名で検索">
+        </div>
+        <div>
+          <label>📌 特記事項キーワード</label>
+          <input type="text" id="viewFilterNote" placeholder="キーワードで検索">
+        </div>
+        <div>
+          <label>📝 支援内容キーワード</label>
+          <input type="text" id="viewFilterDetail" placeholder="キーワードで検索">
+        </div>
+        <div>
+          <label>📋 記録種別</label>
+          <select id="viewFilterType">
+            <option value="">すべて</option>
+            <option value="support">支援記録</option>
+            <option value="vital">バイタル</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label>利用者名</label>
-        <input type="text" id="filterUser" placeholder="利用者名で検索">
+      <div class="filter-actions">
+        <button class="btn btn-save" onclick="applyViewFilter()">🔍 絞り込み</button>
+        <button class="btn btn-cancel" onclick="resetViewFilter()">🔄 リセット</button>
+        <button class="btn btn-export" onclick="exportExcel()">📥 絞り込み結果をExcel出力</button>
+        <span id="viewFilterCountBadge" class="filter-count-badge">0件</span>
       </div>
     </div>
-    <div class="filter-actions">
-      <button class="btn btn-save" onclick="applyFilter()">🔍 フィルター適用</button>
-      <button class="btn btn-cancel" onclick="resetFilter()">🔄 リセット</button>
+    <div class="controls">
+      <button class="btn btn-delete-selected" id="deleteSelectedBtn" onclick="deleteSelected()" style="display: none;">🗑️ 選択削除 (<span id="selectedCount">0</span>件)</button>
     </div>
+    <table id="recordTable">
+      <thead>
+        <tr>
+          <th style="width: 50px;">
+            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
+          </th>
+          <th>記録日</th>
+          <th>サービス区分</th>
+          <th>利用者名</th>
+          <th>記録者名</th>
+          <th>記録内容</th>
+          <th style="width: 120px;">操作</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
-  
-  <table id="recordTable">
-    <thead>
-      <tr>
-        <th>記録日</th>
-        <th>サービス区分</th>
-        <th>利用者名</th>
-        <th>記録者名</th>
-        <th>記録内容</th>
-        <th style="width: 160px;">操作</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
 
 <!-- 一括入力モーダル（NEW） -->
 <div id="batchModal" class="batch-modal">
@@ -1532,8 +1797,8 @@
     <div class="sync-section">
       <h3>📤 データ同期</h3>
       <div class="sync-buttons">
-        <button class="btn btn-sync" onclick="syncToCloud()">⬆️ データをアップロード</button>
-        <button class="btn btn-sync" onclick="syncFromCloud()">⬇️ データをダウンロード</button>
+        <button class="btn btn-sync" onclick="uploadLocalRecords()">⬆️ 入力記録をアップロード</button>
+        <button class="btn btn-sync" onclick="downloadCloudRecords()">⬇️ 閲覧記録をダウンロード</button>
       </div>
       <div id="syncStatus" class="sync-status"></div>
     </div>
@@ -1561,11 +1826,17 @@
   }
   
   // グローバル変数
+  // ---- データモデル ----
+  // records        : 記録入力タブで入力した記録（アップロード対象）
+  // cloudRecords   : 閲覧タブでダウンロードした記録（閲覧専用・アップロード非対象）
+  // filtered       : cloudRecords を絞り込んだもの（閲覧テーブル表示用）
   let records = JSON.parse(localStorage.getItem('records') || '[]');
-  let filtered = [...records];
+  let cloudRecords = [];         // ダウンロードした記録（メモリ上のみ）
+  let filtered = [];             // 閲覧テーブル用（cloudRecords のサブセット）
   let rowIdCounter = 0;
   let supportCounterMap = {};
   let vitalCounterMap = {};
+  let editingRecordId = null; // 編集モード時の対象記録ID
   
   // マスターデータ
   let masterUsers = JSON.parse(localStorage.getItem('masterUsers') || '[]');
@@ -1900,8 +2171,7 @@
     });
     
     saveRecords();
-    filtered = [...records];
-    renderTable();
+    renderLocalTable();   // 入力タブのアップロード待ち一覧を更新
     
     alert(`✓ ${savedCount}人分の支援記録を一括保存しました！`);
     closeBatchModal();
@@ -2012,59 +2282,171 @@
     }, 5000);
   }
   
-  async function syncToCloud() {
+  
+  // データ圧縮（簡易版）
+  function compressData(data) {
+    try {
+      const jsonStr = JSON.stringify(data);
+      // Base64エンコード（実際の圧縮は省略、必要に応じてlz-stringなどを使用）
+      return btoa(unescape(encodeURIComponent(jsonStr)));
+    } catch (e) {
+      console.error('データ圧縮エラー:', e);
+      return null;
+    }
+  }
+  
+  // データ展開
+  function decompressData(compressed) {
+    try {
+      const jsonStr = decodeURIComponent(escape(atob(compressed)));
+      return JSON.parse(jsonStr);
+    } catch (e) {
+      console.error('データ展開エラー:', e);
+      return null;
+    }
+  }
+  
+  // 配列を分割
+  function chunkArray(array, chunkSize) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+  }
+  
+  // アップロード: records (入力記録のみ) を送信
+  async function uploadLocalRecords() {
     const url = localStorage.getItem('syncUrl');
     if (!url) {
-      alert('先に同期URLを設定してください');
+      alert('先に同期URLを設定してください（⚙️ マスター → ☁️ 同期）');
+      openSyncModal();
       return;
     }
     
-    if (!confirm('データをGoogle Sheetsにアップロードしますか？')) {
+    const recordCount = records.length;
+    if (recordCount === 0) {
+      alert('アップロードする記録がありません。\n記録入力タブで記録を保存してください。');
       return;
     }
+    
+    let confirmMsg = `入力記録をGoogle Sheetsにアップロードしますか？\n\n📋 アップロード件数: ${recordCount}件\n\n※閲覧タブのクラウドデータは送信されません`;
+    
+    if (recordCount > 1000) {
+      confirmMsg += '\n\n⚠️ データ量が多いため、アップロードに時間がかかる可能性があります。';
+    }
+    
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+    
+    showSyncStatus('⏳ アップロード中...', true);
     
     try {
-      const data = {
-        records,
-        masterUsers,
-        masterServices,
-        masterStaff,
-        masterSupportTypes,
-        masterConditions,
-        masterLocations,
-        masterActivityTypes,
-        supportConditionMap
-      };
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      
-      showSyncStatus('✓ データをアップロードしました', true);
+      // データ量が多い場合は分割アップロード
+      if (recordCount > 500) {
+        // 記録を500件ずつに分割
+        const recordChunks = chunkArray(records, 500);
+        
+        for (let i = 0; i < recordChunks.length; i++) {
+          showSyncStatus(`⏳ アップロード中... (${i + 1}/${recordChunks.length})`, true);
+          
+          const chunkData = {
+            records: recordChunks[i],
+            masterUsers: i === 0 ? masterUsers : [],
+            masterServices: i === 0 ? masterServices : [],
+            masterStaff: i === 0 ? masterStaff : [],
+            masterSupportTypes: i === 0 ? masterSupportTypes : [],
+            masterConditions: i === 0 ? masterConditions : [],
+            masterLocations: i === 0 ? masterLocations : [],
+            masterActivityTypes: i === 0 ? masterActivityTypes : [],
+            supportConditionMap: i === 0 ? supportConditionMap : {},
+            isChunk: true,
+            chunkIndex: i,
+            totalChunks: recordChunks.length,
+            appendMode: true   // 追記モード: 既存データを上書きしない
+          };
+          
+          await fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(chunkData)
+          });
+          
+          // 次のチャンクまで少し待機
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showSyncStatus(`✓ データをアップロードしました（${recordChunks.length}回に分割）`, true);
+        if (confirm(`✓ ${recordCount}件のアップロードが完了しました。\nアップロード待ち記録をクリアしますか？`)) {
+          records = [];
+          saveRecords();
+          renderLocalTable();
+        }
+      } else {
+        // 通常のアップロード（追記モード）
+        const data = {
+          records,
+          masterUsers,
+          masterServices,
+          masterStaff,
+          masterSupportTypes,
+          masterConditions,
+          masterLocations,
+          masterActivityTypes,
+          supportConditionMap,
+          appendMode: true   // 追記モード: 既存データを上書きしない
+        };
+        
+        await fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        showSyncStatus(`✓ ${recordCount}件のデータをアップロードしました`, true);
+        if (confirm(`✓ ${recordCount}件のアップロードが完了しました。\nアップロード待ち記録をクリアしますか？`)) {
+          records = [];
+          saveRecords();
+          renderLocalTable();
+        }
+      }
     } catch (error) {
       showSyncStatus('✗ アップロードに失敗しました: ' + error.message, false);
     }
   }
   
-  async function syncFromCloud() {
+  // ダウンロード: cloudRecords に保存（records/localStorageは上書きしない）
+  async function downloadCloudRecords() {
     const url = localStorage.getItem('syncUrl');
     if (!url) {
-      alert('先に同期URLを設定してください');
+      alert('先に同期URLを設定してください（⚙️ マスター → ☁️ 同期）');
+      openSyncModal();
       return;
     }
     
-    if (!confirm('Google Sheetsからデータをダウンロードしますか？\n※ローカルのデータは上書きされます')) {
+    if (!confirm('Google Sheetsからデータをダウンロードしますか？\n\n📋 ダウンロードしたデータは閲覧タブに表示されます\n※入力済みのアップロード待ち記録には影響しません')) {
       return;
     }
+    
+    // 閲覧タブに切り替え
+    switchTab('view');
     
     try {
+      showSyncStatus('⏳ ダウンロード中...', true);
       const response = await fetch(url);
       const data = await response.json();
       
-      if (data.records) records = data.records;
+      // cloudRecords を更新（records/localStorageは変更しない）
+      if (data.records) {
+        cloudRecords = data.records;
+        // IDを確保
+        cloudRecords.forEach(r => { if (!r.id) r.id = generateRecordId(); });
+      }
+      
+      // マスターデータはダウンロードして更新（利用者リスト等を最新に保つ）
       if (data.masterUsers) masterUsers = data.masterUsers;
       if (data.masterServices) masterServices = data.masterServices;
       if (data.masterStaff) masterStaff = data.masterStaff;
@@ -2073,22 +2455,26 @@
       if (data.masterLocations) masterLocations = data.masterLocations;
       if (data.masterActivityTypes) masterActivityTypes = data.masterActivityTypes;
       if (data.supportConditionMap) supportConditionMap = data.supportConditionMap;
-      
-      saveRecords();
       saveMasterData();
       
-      // データ反映を確実に実行
-      ensureRecordIds();
-      filtered = [...records];
+      // 閲覧テーブルを更新
+      filtered = [...cloudRecords];
       renderTable();
       updateFilterOptions();
       renderMasterLists();
       
-      showSyncStatus('✓ データをダウンロードしました', true);
+      const cloudInfo = document.getElementById('cloudRecordInfo');
+      if (cloudInfo) cloudInfo.textContent = `✓ ${cloudRecords.length}件ダウンロード済み`;
+      
+      showSyncStatus(`✓ ${cloudRecords.length}件のデータをダウンロードしました`, true);
     } catch (error) {
       showSyncStatus('✗ ダウンロードに失敗しました: ' + error.message, false);
     }
   }
+  
+  // 後方互換性のためエイリアスを残す
+  async function syncToCloud() { await uploadLocalRecords(); }
+  async function syncFromCloud() { await downloadCloudRecords(); }
   
   // マスターデータ追加関数
   function addUser() {
@@ -3003,20 +3389,43 @@
       alert(`✓ バイタル記録を保存しました！（測定回数: ${vitalMeasurements.length}回）`);
     }
     
+    // 編集モードの場合：元のcloudRecordsから削除し、recordsに追加（アップロード対象）
+    if (editingRecordId) {
+      const cloudIdx = cloudRecords.findIndex(r => r.id === editingRecordId);
+      if (cloudIdx > -1) cloudRecords.splice(cloudIdx, 1);
+      filtered = filtered.filter(r => r.id !== editingRecordId);
+      // 既にrecordsに同じIDがあれば削除
+      const localIdx = records.findIndex(r => r.id === editingRecordId);
+      if (localIdx > -1) records.splice(localIdx, 1);
+      editingRecordId = null;
+      document.getElementById('editModeBanner').classList.remove('active');
+    }
+
     records.push(record);
     saveRecords();
-    
-    filtered = [...records];
-    renderTable();
+    renderLocalTable();   // 入力タブのアップロード待ち一覧を更新
     removeRow(rowId);
+    alert('✓ 記録を編集しました。入力タブの「アップロード待ち記録」からアップロードしてください。');
   }
 
   function renderTable() {
     const tbody = document.querySelector('#recordTable tbody');
     tbody.innerHTML = '';
     
+    // 全選択チェックボックスをリセット
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+    
+    // 削除ボタンを非表示
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+
+    // 件数バッジを更新
+    const badge = document.getElementById('viewFilterCountBadge');
+    if (badge) badge.textContent = filtered.length + '件';
+
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #999;">記録がありません</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: #999;">記録がありません</td></tr>';
       return;
     }
     
@@ -3059,14 +3468,15 @@
       }
       
       tr.innerHTML = `
+        <td><input type="checkbox" class="record-checkbox" data-record-id="${r.id || ''}" onchange="updateDeleteButton()"></td>
         <td>${r.date}</td>
         <td><span class="service-badge badge-${r.service}">${r.service}</span></td>
         <td>${r.user}</td>
         <td>${r.staff}</td>
         <td style="min-width: 300px;">${contentHtml}</td>
         <td style="white-space: nowrap;">
-          <button class="btn-edit" onclick="editRecord('${r.id || ''}')">✏️</button>
-          <button class="btn-delete-record" onclick="deleteRecord('${r.id || ''}')">🗑️</button>
+          <button class="btn-edit-view" onclick="editRecord('${r.id || ''}')" title="編集（記録入力画面へ移動）">✏️ 編集</button>
+          <button class="btn-delete-view" onclick="deleteRecord('${r.id || ''}')" title="削除">🗑️</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -3074,38 +3484,79 @@
   }
 
   function updateFilterOptions() {
-    const filterServiceEl = document.getElementById('filterService');
-    filterServiceEl.innerHTML = '<option value="">サービス区分（全て）</option>';
-    masterServices.forEach(service => {
-      const option = document.createElement('option');
-      option.value = service;
-      option.textContent = service;
-      filterServiceEl.appendChild(option);
-    });
+    // 閲覧タブ用フィルターのサービス区分選択肢更新
+    const viewEl = document.getElementById('viewFilterService');
+    if (viewEl) {
+      viewEl.innerHTML = '<option value="">すべて</option>';
+      masterServices.forEach(service => {
+        const option = document.createElement('option');
+        option.value = service;
+        option.textContent = service;
+        viewEl.appendChild(option);
+      });
+    }
   }
 
-  function applyFilter() {
-    const month = document.getElementById('filterMonth').value;
-    const service = document.getElementById('filterService').value;
-    const user = document.getElementById('filterUser').value.trim().toLowerCase();
-    
-    filtered = records.filter(r => {
+  // 閲覧タブ用フィルター
+  function applyViewFilter() {
+    const month = document.getElementById('viewFilterMonth').value;
+    const service = document.getElementById('viewFilterService').value;
+    const user = document.getElementById('viewFilterUser').value.trim().toLowerCase();
+    const note = document.getElementById('viewFilterNote').value.trim().toLowerCase();
+    const detail = document.getElementById('viewFilterDetail').value.trim().toLowerCase();
+    const recType = document.getElementById('viewFilterType').value;
+
+    // cloudRecords（ダウンロード済み記録）を絞り込む
+    filtered = cloudRecords.filter(r => {
       if (month && !r.date.startsWith(month)) return false;
       if (service && r.service !== service) return false;
       if (user && !r.user.toLowerCase().includes(user)) return false;
+      if (recType && r.recordType !== recType) return false;
+
+      // 特記事項キーワード
+      if (note) {
+        let found = false;
+        if (r.recordType === 'support') {
+          found = r.supportContents.some(s => (s.note || '').toLowerCase().includes(note));
+        } else if (r.recordType === 'vital') {
+          found = r.vitalMeasurements.some(v => (v.note || '').toLowerCase().includes(note));
+        }
+        if (!found) return false;
+      }
+
+      // 支援内容キーワード
+      if (detail) {
+        let found = false;
+        if (r.recordType === 'support') {
+          found = r.supportContents.some(s =>
+            (s.detail || '').toLowerCase().includes(detail) ||
+            (s.type || '').toLowerCase().includes(detail) ||
+            (s.activity || '').toLowerCase().includes(detail)
+          );
+        }
+        if (!found) return false;
+      }
+
       return true;
     });
     
     renderTable();
   }
 
-  function resetFilter() {
-    document.getElementById('filterMonth').value = '';
-    document.getElementById('filterService').value = '';
-    document.getElementById('filterUser').value = '';
-    filtered = [...records];
+  function resetViewFilter() {
+    document.getElementById('viewFilterMonth').value = '';
+    document.getElementById('viewFilterService').value = '';
+    document.getElementById('viewFilterUser').value = '';
+    document.getElementById('viewFilterNote').value = '';
+    document.getElementById('viewFilterDetail').value = '';
+    document.getElementById('viewFilterType').value = '';
+    filtered = [...cloudRecords];
     renderTable();
   }
+
+  // 互換性のため旧applyFilter/resetFilterも残す
+  function applyFilter() { applyViewFilter(); }
+  function resetFilter() { resetViewFilter(); }
 
   function exportExcel() {
     if (filtered.length === 0) {
@@ -3187,101 +3638,324 @@
     const today = new Date().toISOString().split('T')[0];
     XLSX.writeFile(wb, `支援記録_${today}.xlsx`);
     
-    alert('✓ Excelファイルをダウンロードしました');
+    alert('✓ Excelファイルをダウンロードしました（閲覧中の絞り込み結果: ' + filtered.length + '件）');
   }
 
   function clearAll() {
-    if (!confirm('すべての記録を削除します。よろしいですか？\n\n※マスターデータは削除されません')) {
+    if (!confirm('アップロード待ちの入力記録をすべて削除します。\nよろしいですか？\n\n※閲覧中のクラウドデータには影響しません')) {
       return;
     }
     
     records = [];
-    filtered = [];
     saveRecords();
-    renderTable();
-    alert('✓ すべての記録を削除しました');
+    renderLocalTable();
+    alert('✓ 入力記録をすべて削除しました');
   }
 
   
-  // 記録削除機能
+  
+  // 全選択/解除
+  function toggleSelectAll(checked) {
+    const checkboxes = document.querySelectorAll('.record-checkbox');
+    checkboxes.forEach(cb => {
+      cb.checked = checked;
+    });
+    updateDeleteButton();
+  }
+  
+  // 削除ボタンの表示/非表示と選択件数の更新
+  function updateDeleteButton() {
+    const checkboxes = document.querySelectorAll('.record-checkbox:checked');
+    const count = checkboxes.length;
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    const countSpan = document.getElementById('selectedCount');
+    
+    if (count > 0) {
+      deleteBtn.style.display = 'inline-flex';
+      countSpan.textContent = count;
+    } else {
+      deleteBtn.style.display = 'none';
+    }
+    
+    // 全選択チェックボックスの状態を更新
+    const allCheckboxes = document.querySelectorAll('.record-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+    }
+  }
+  
+  // 選択された記録を一括削除
+  function deleteSelected() {
+    const checkboxes = document.querySelectorAll('.record-checkbox:checked');
+    const count = checkboxes.length;
+    
+    if (count === 0) {
+      alert('削除する記録を選択してください');
+      return;
+    }
+    
+    if (!confirm(`選択した${count}件の記録を削除しますか？\n\n削除した記録は復元できません。`)) {
+      return;
+    }
+    
+    const idsToDelete = [];
+    checkboxes.forEach(cb => {
+      const recordId = cb.getAttribute('data-record-id');
+      if (recordId) {
+        idsToDelete.push(recordId);
+      }
+    });
+    
+    // cloudRecords から削除（localStorageには影響しない）
+    cloudRecords = cloudRecords.filter(r => !idsToDelete.includes(r.id));
+    filtered = filtered.filter(r => !idsToDelete.includes(r.id));
+    renderTable();
+    
+    // 全選択チェックボックスをリセット
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked = false;
+    }
+    
+    alert(`✓ ${count}件の記録を閲覧リストから削除しました\n（クラウド上のデータには影響しません）`);
+  }
+  
+  // 記録削除機能（閲覧タブ用：cloudRecords から削除）
   function deleteRecord(recordId) {
     if (!recordId) {
       alert('記録IDが見つかりません');
       return;
     }
     
-    if (!confirm('この記録を削除しますか？\n\n削除した記録は復元できません。')) {
+    if (!confirm('この記録を閲覧リストから削除しますか？\n\n※クラウド上のデータには影響しません。')) {
       return;
     }
     
-    const index = records.findIndex(r => r.id === recordId);
+    const index = cloudRecords.findIndex(r => r.id === recordId);
     if (index > -1) {
-      records.splice(index, 1);
-      saveRecords();
-      
-      filtered = [...records];
+      cloudRecords.splice(index, 1);
+      filtered = filtered.filter(r => r.id !== recordId);
       renderTable();
-      
-      alert('✓ 記録を削除しました');
+      alert('✓ 記録を閲覧リストから削除しました');
     } else {
       alert('記録が見つかりませんでした');
     }
   }
   
-  // 記録編集機能（簡易版：削除して再入力を促す）
+  // 入力タブの記録を個別削除（アップロード前にキャンセルしたい場合）
+  function deleteLocalRecord(recordId) {
+    if (!recordId) return;
+    if (!confirm('この入力記録を削除しますか？')) return;
+    const index = records.findIndex(r => r.id === recordId);
+    if (index > -1) {
+      records.splice(index, 1);
+      saveRecords();
+      renderLocalTable();
+      alert('✓ 入力記録を削除しました');
+    }
+  }
+  
+  // =============================================
+  // タブ切り替え
+  // =============================================
+  function switchTab(tab) {
+    document.getElementById('tabInput').classList.toggle('active', tab === 'input');
+    document.getElementById('tabView').classList.toggle('active', tab === 'view');
+    document.getElementById('tabBtnInput').classList.toggle('active', tab === 'input');
+    document.getElementById('tabBtnView').classList.toggle('active', tab === 'view');
+    if (tab === 'view') {
+      // filtered は cloudRecords のサブセットとして再設定
+      if (filtered.length === 0 && cloudRecords.length > 0) {
+        filtered = [...cloudRecords];
+      }
+      renderTable();
+    }
+    if (tab === 'input') {
+      renderLocalTable();
+    }
+  }
+
+  // =============================================
+  // 編集モード管理
+  // =============================================
+
+  function cancelEditMode() {
+    editingRecordId = null;
+    document.getElementById('editModeBanner').classList.remove('active');
+    // 入力フォームをすべて削除
+    document.getElementById('inputContainer').innerHTML = '';
+  }
+
+  // ============================================================
+  // 記録入力タブ：アップロード待ち記録一覧を描画
+  // ============================================================
+  function renderLocalTable() {
+    const tbody = document.querySelector('#localRecordTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    const badge = document.getElementById('localRecordCountBadge');
+    if (badge) badge.textContent = records.length + '件';
+
+    if (records.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#999;">アップロード待ちの記録はありません</td></tr>';
+      return;
+    }
+    
+    const sorted = [...records].sort((a, b) => b.date.localeCompare(a.date));
+    sorted.forEach(r => {
+      const tr = document.createElement('tr');
+      let contentHtml = '';
+      if (r.recordType === 'support') {
+        r.supportContents.forEach((s, idx) => {
+          contentHtml += `<div style="font-size:13px;">【${idx+1}】${s.type}`;
+          if (s.note) contentHtml += ` / 📌${s.note}`;
+          contentHtml += '</div>';
+        });
+      } else if (r.recordType === 'vital') {
+        contentHtml = '<span style="background:#ffe0e0;padding:2px 8px;border-radius:4px;font-size:13px;">🏥 バイタル</span>';
+      }
+      tr.innerHTML = `
+        <td>${r.date}</td>
+        <td><span class="service-badge badge-${r.service}" style="font-size:12px;">${r.service}</span></td>
+        <td>${r.user}</td>
+        <td>${r.staff}</td>
+        <td>${contentHtml}</td>
+        <td><button class="btn-delete-view" onclick="deleteLocalRecord('${r.id || ''}')" title="削除">🗑️</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // 記録編集機能（記録入力タブへ移動して既存データを展開）
   function editRecord(recordId) {
     if (!recordId) {
       alert('記録IDが見つかりません');
       return;
     }
     
-    const record = records.find(r => r.id === recordId);
+    // 閲覧タブからの編集：cloudRecords を検索
+    const record = cloudRecords.find(r => r.id === recordId);
     if (!record) {
       alert('記録が見つかりませんでした');
       return;
     }
-    
-    // 記録内容を表示
-    let message = '【記録の詳細】\n\n';
-    message += `記録日: ${record.date}\n`;
-    message += `サービス区分: ${record.service}\n`;
-    message += `利用者名: ${record.user}\n`;
-    message += `記録者名: ${record.staff}\n\n`;
-    
+
+    if (!confirm(`この記録を編集します。\n\n記録日: ${record.date}\n利用者: ${record.user}\n\n「記録入力」タブに移動して内容を確認・修正後、保存してください。\n（元の記録は保存ボタンを押すと自動的に削除されます）`)) {
+      return;
+    }
+
+    // 記録入力タブへ切り替え
+    switchTab('input');
+
+    // 既存フォームをクリア
+    document.getElementById('inputContainer').innerHTML = '';
+
+    // 編集モードセット
+    editingRecordId = recordId;
+    document.getElementById('editModeBanner').classList.add('active');
+
+    // 新規行を作成してデータを流し込む
+    const newRow = createInputRow();
+    document.getElementById('inputContainer').appendChild(newRow);
+    newRow.classList.add('active');
+
+    // 基本情報をセット
+    newRow.querySelector('.row-date').value = record.date;
+
+    // サービス区分
+    const serviceSelect = newRow.querySelector('.row-service');
+    setTimeout(() => {
+      serviceSelect.value = record.service;
+      // 利用者選択肢更新後にセット
+      updateUserSelect(newRow, record.service, record.user);
+    }, 50);
+
+    // 記録者
+    const staffSelect = newRow.querySelector('.row-staff');
+    setTimeout(() => { staffSelect.value = record.staff; }, 100);
+
     if (record.recordType === 'support') {
-      message += '【支援内容】\n';
-      record.supportContents.forEach((s, idx) => {
-        message += `\n${idx + 1}. ${s.type}\n`;
-        if (s.timeRange) message += `   時間: ${s.timeRange}\n`;
-        if (s.cond) message += `   様子: ${s.cond}\n`;
-        if (s.location) message += `   場所: ${s.location}\n`;
-        if (s.activity) message += `   活動: ${s.activity}\n`;
-        if (s.detail) message += `   詳細: ${s.detail}\n`;
-        if (s.note) message += `   特記: ${s.note}\n`;
-      });
+      // 支援記録タブを選択
+      const toggleBtn = newRow.querySelector('.btn-toggle');
+      if (toggleBtn && !newRow.querySelector('.support-input-area').classList.contains('active')) {
+        toggleBtn.click();
+      }
+      // 支援内容を流し込む
+      setTimeout(() => {
+        populateEditSupportContents(newRow, record.supportContents);
+      }, 200);
     } else if (record.recordType === 'vital') {
-      message += '【バイタル測定】\n';
-      record.vitalMeasurements.forEach((v, idx) => {
-        message += `\n測定${idx + 1}\n`;
-        if (v.time) message += `   時刻: ${v.time}\n`;
-        if (v.temp) message += `   体温: ${v.temp}℃\n`;
-        if (v.bpSys && v.bpDia) message += `   血圧: ${v.bpSys}/${v.bpDia}mmHg\n`;
-        if (v.pulse) message += `   脈拍: ${v.pulse}回/分\n`;
-        if (v.spo2) message += `   SpO2: ${v.spo2}%\n`;
-        if (v.resp) message += `   呼吸数: ${v.resp}回/分\n`;
-        if (v.note) message += `   特記: ${v.note}\n`;
-      });
+      // バイタルタブを表示（2番目のトグルボタンを探す）
+      const vitBtn = newRow.querySelector('[onclick*="toggleVital"]') ||
+                     Array.from(newRow.querySelectorAll('.btn-toggle')).find(b => b.textContent.includes('バイタル'));
+      if (vitBtn) {
+        setTimeout(() => { vitBtn.click(); }, 50);
+      }
     }
-    
-    message += '\n\n【編集方法】\n';
-    message += '1. この記録を削除する\n';
-    message += '2. 「➕ 新規記録」または「📋 一括入力」で修正した内容を再入力\n\n';
-    message += 'この記録を削除しますか？';
-    
-    if (confirm(message)) {
-      deleteRecord(recordId);
-    }
+
+    newRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  function populateEditSupportContents(row, supportContents) {
+    const supportArea = row.querySelector('.support-input-area');
+    if (!supportArea) return;
+    const container = supportArea.querySelector('.support-content-section') ||
+                      supportArea.querySelector('[id^="support-container-"]');
+    
+    // 既存の行を取得（最初の1行は既に存在している）
+    const existingRows = row.querySelectorAll('.support-content-row');
+    
+    supportContents.forEach((s, idx) => {
+      let supportRow;
+      if (idx === 0 && existingRows.length > 0) {
+        supportRow = existingRows[0];
+      } else {
+        // 追加ボタンをクリックして行を増やす
+        const addBtn = supportArea.querySelector('[onclick*="addSupportContent"]');
+        if (addBtn) addBtn.click();
+        const allRows = row.querySelectorAll('.support-content-row');
+        supportRow = allRows[allRows.length - 1];
+      }
+      if (!supportRow) return;
+
+      const typeSelect = supportRow.querySelector('select');
+      if (typeSelect) typeSelect.value = s.type;
+
+      const timeInputs = supportRow.querySelectorAll('input[type="time"]');
+      if (s.timeRange) {
+        const parts = s.timeRange.split('〜');
+        if (timeInputs[0]) timeInputs[0].value = (parts[0] || '').trim();
+        if (timeInputs[1]) timeInputs[1].value = (parts[1] || '').trim();
+      }
+
+      const selects = supportRow.querySelectorAll('select');
+      // selects[0]=支援内容, [1]=様子, [2]=場所, [3]=活動
+      if (selects[1]) selects[1].value = s.cond || '';
+      if (selects[2]) selects[2].value = s.location || '';
+      if (selects[3]) selects[3].value = s.activity || '';
+
+      const textareas = supportRow.querySelectorAll('textarea');
+      if (textareas[0]) textareas[0].value = s.detail || '';
+      if (textareas[1]) textareas[1].value = s.note || '';
+    });
+  }
+
+  function updateUserSelect(row, service, userName) {
+    const serviceSelect = row.querySelector('.row-service');
+    if (serviceSelect) serviceSelect.value = service;
+    // サービス区分変更イベントを発火して利用者リストを更新
+    const event = new Event('change');
+    if (serviceSelect) serviceSelect.dispatchEvent(event);
+    setTimeout(() => {
+      const userSelect = row.querySelector('.row-user');
+      if (userSelect) userSelect.value = userName;
+    }, 100);
+  }
+
+  // saveRowをラップして編集モード時は元記録を削除してから保存
+  const _originalSaveRow = typeof saveRow !== 'undefined' ? saveRow : null;
   
   // ページ読み込み時の処理
   document.addEventListener('DOMContentLoaded', () => {
@@ -3293,10 +3967,89 @@
     
     // データ読み込み
     loadMasterData();
-    renderTable();
+    renderLocalTable();    // 入力タブのアップロード待ちリスト描画
     updateFilterOptions();
     initSpeechRecognition();
+    // QRコード生成（ログイン画面用）
+    generateQRCode();
   });
+
+  // ============================================================
+  // QRコード生成（Canvas APIで外部ライブラリ不要）
+  // ============================================================
+  function generateQRCode() {
+    // URLを取得（file://の場合はフォールバックメッセージを表示）
+    var url = window.location.href;
+    var wrap = document.querySelector('.qr-canvas-wrap');
+    var hint = document.getElementById('qrUrlHint');
+
+    if (hint) {
+      var short = url.length > 80 ? url.substring(0, 77) + '...' : url;
+      hint.textContent = short;
+    }
+    if (!wrap) return;
+
+    // file:// プロトコルの場合はQRコードを生成しても意味がないのでメッセージ表示
+    if (url.indexOf('file://') === 0) {
+      wrap.innerHTML = '<div style="padding:10px;text-align:center;color:#888;font-size:12px;">⚠️ ローカルファイルではQRコードを表示できません。<br>WebサーバーまたはGoogle Driveで開いてください。</div>';
+      return;
+    }
+
+    // ── 方法①: qrcodejs CDN ──
+    if (typeof QRCode !== 'undefined') {
+      try {
+        wrap.innerHTML = '';
+        new QRCode(wrap, { text: url, width: 200, height: 200, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+        return;
+      } catch(e) { console.warn('qrcodejs失敗:', e); }
+    }
+
+    // ── 方法②: Google Chart API ──
+    try {
+      var encoded = encodeURIComponent(url);
+      var img = document.createElement('img');
+      img.src = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&choe=UTF-8&chl=' + encoded;
+      img.width = 200; img.height = 200; img.alt = 'QRコード';
+      img.style.cssText = 'display:block;margin:0 auto;';
+      img.onerror = function() { _showQrTextFallback(wrap, url); };
+      wrap.innerHTML = '';
+      wrap.appendChild(img);
+      return;
+    } catch(e) { console.warn('Chart API失敗:', e); }
+
+    // ── 方法③: URLコピーボタン ──
+    _showQrTextFallback(wrap, url);
+  }
+
+  function _showQrTextFallback(wrap, url) {
+    var div = document.createElement('div');
+    div.style.cssText = 'padding:12px;background:#f8f8f8;border:1px solid #ccc;border-radius:6px;text-align:center;font-size:12px;word-break:break-all;';
+    var title = document.createElement('p');
+    title.style.cssText = 'margin:0 0 6px;font-weight:bold;font-size:13px;';
+    title.textContent = '📋 このページのURL';
+    var urlText = document.createElement('p');
+    urlText.style.cssText = 'margin:0 0 8px;color:#2c5aa0;font-size:11px;';
+    urlText.textContent = url;
+    var copyBtn = document.createElement('button');
+    copyBtn.textContent = 'URLをコピー';
+    copyBtn.style.cssText = 'padding:6px 14px;background:#2c5aa0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;';
+    copyBtn.addEventListener('click', function() {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function() { alert('URLをコピーしました'); });
+      } else {
+        prompt('URLをコピーしてください:', url);
+      }
+    });
+    div.appendChild(title);
+    div.appendChild(urlText);
+    div.appendChild(copyBtn);
+    wrap.innerHTML = '';
+    wrap.appendChild(div);
+  }
+
+
+  // createQR: generateQRCode内で処理に統合
+
 
   // モーダルの外側クリックで閉じる
   window.onclick = function(event) {
